@@ -1,0 +1,1274 @@
+﻿<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mbcn - Cable TV Subscriber Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+
+    <!-- Top Navigation Bar -->
+    <nav class="bg-slate-900 text-white px-6 py-4 flex flex-wrap justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-lg font-bold text-xl tracking-wider">Mbcn</div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wide">Maa Bhagabati Cable Network</h1>
+                <p class="text-xs text-indigo-300">XALT Subscriber Management System</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+            <button onclick="switchView('LCO_LOGIN')" id="btnLcoNav" class="px-4 py-2 rounded-lg font-semibold bg-indigo-600 text-white transition text-xs">LCO Admin Login</button>
+            <button onclick="switchView('CUST_LOGIN')" id="btnCustNav" class="px-4 py-2 rounded-lg font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">Customer Login</button>
+            <button onclick="openChangePasswordModal()" id="btnChangePassNav" class="hidden px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white transition">🔒 Change Password</button>
+            <button onclick="logoutLco()" id="btnLcoLogout" class="hidden px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition">LCO Logout</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
+
+        <!-- =================================================== -->
+        <!-- VIEW 1: LCO ADMIN LOGIN SCREEN                     -->
+        <!-- =================================================== -->
+        <div id="lcoLoginView" class="max-w-md mx-auto my-12 bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="inline-block p-3 bg-indigo-100 text-indigo-600 rounded-full mb-2">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Mbcn Secure Access</h2>
+                <p class="text-xs text-slate-500 mt-1">LCO Operator Login & License Authorization</p>
+            </div>
+            
+            <form onsubmit="handleLcoLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Username</label>
+                    <input type="text" id="lcoUsername" required placeholder="Adminbubu" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-bold uppercase text-slate-600">Password</label>
+                        <button type="button" onclick="openForgotPasswordModal()" class="text-xs text-indigo-600 hover:underline font-semibold">Forgot Password?</button>
+                    </div>
+                    <input type="password" id="lcoPassword" required placeholder="••••••••" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold transition text-sm">Open Mbcn Admin Portal</button>
+            </form>
+            <p id="lcoLoginError" class="text-red-500 text-xs mt-3 text-center hidden font-semibold">Galat Username ya Password! Default Username: Adminbubu</p>
+        </div>
+
+        <!-- =================================================== -->
+        <!-- VIEW 2: CUSTOMER LOGIN SCREEN                       -->
+        <!-- =================================================== -->
+        <div id="customerLoginView" class="hidden max-w-md mx-auto my-12 bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+            <h2 class="text-2xl font-bold text-center text-slate-800 mb-2">Customer Self Portal</h2>
+            <p class="text-sm text-slate-500 text-center mb-6">Apna Registered Mobile Number Daalein</p>
+            
+            <form onsubmit="handleCustomerLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Mobile Number</label>
+                    <input type="tel" id="loginMobile" required placeholder="e.g. 9876543210" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold transition text-sm">Login Karein</button>
+            </form>
+            <p id="custLoginError" class="text-red-500 text-sm mt-3 text-center hidden">Yeh Mobile Number Registered Nahi Hai!</p>
+        </div>
+
+        <!-- =================================================== -->
+        <!-- VIEW 3: CUSTOMER DASHBOARD                          -->
+        <!-- =================================================== -->
+        <div id="customerDashboardView" class="hidden space-y-6">
+            <div class="flex flex-wrap justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800" id="custPortalName">Welcome, Subscriber</h2>
+                    <p class="text-xs text-slate-500 mt-1">
+                        CAF No: <span id="custPortalCaf" class="font-bold text-slate-700">--</span> | 
+                        STB ID: <span id="custPortalStb" class="font-bold text-slate-700">--</span> | 
+                        Smart Card: <span id="custPortalSmartCard" class="font-bold text-indigo-600">--</span>
+                    </p>
+                    <p class="text-xs text-slate-500 mt-0.5">Area Zone: <span id="custPortalZone" class="font-medium text-slate-700">--</span></p>
+                </div>
+                <button onclick="logoutCustomer()" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-200 mt-3 sm:mt-0">Logout</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-indigo-500">
+                    <p class="text-xs text-slate-500 uppercase font-bold">1. Network State</p>
+                    <div id="custPortalStatus" class="mt-2 text-base font-bold">--</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-emerald-500">
+                    <p class="text-xs text-slate-500 uppercase font-bold">2. CAS Encryption</p>
+                    <div id="custPortalCas" class="mt-2 text-base font-bold text-emerald-600">--</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-blue-500">
+                    <p class="text-xs text-slate-500 uppercase font-bold">3. Monthly Charge</p>
+                    <div id="custPortalBill" class="mt-2 text-xl font-bold text-slate-800">₹0</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-amber-500">
+                    <p class="text-xs text-slate-500 uppercase font-bold">4. Plan Expiry Date</p>
+                    <div id="custPortalExpiry" class="mt-2 text-base font-bold text-slate-700">--</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-red-500">
+                    <p class="text-xs text-slate-500 uppercase font-bold">5. Total Pending Amount</p>
+                    <div id="custPortalPendingAmt" class="mt-2 text-2xl font-extrabold text-red-600">₹0</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-800">Active Subscription Packages on Your STB</h3>
+                    <span class="text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full font-medium">🔒 Read-Only Portal (Package modifications via LCO only)</span>
+                </div>
+                <div id="custPortalPackages" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Dynamic Package Cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================== -->
+        <!-- VIEW 4: LCO ADMIN DASHBOARD                         -->
+        <!-- =================================================== -->
+        <div id="lcoDashboardView" class="hidden space-y-6">
+
+            <!-- Backup, Automatic Billing & License Bar -->
+            <div class="flex flex-wrap justify-between items-center bg-slate-900 text-white p-4 rounded-2xl text-xs space-y-2 sm:space-y-0">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-green-500 text-black font-bold px-2 py-0.5 rounded text-[10px]">Mbcn LICENSE ACTIVE</span>
+                    <span>Operator: Maa Bhagabati Cable Network</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="generateAutomaticBills()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-3 py-1.5 rounded-lg transition shadow">⚡ Run Automatic Monthly Billing</button>
+                    <button onclick="exportBackupData()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-semibold transition">📥 Backup Data (JSON)</button>
+                    <label class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg font-semibold cursor-pointer">
+                        📤 Restore Data
+                        <input type="file" id="importFile" onchange="importBackupData(event)" class="hidden" accept=".json">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Year-Wise Filter & Analytics Header -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Network Dashboard & Analytics</h2>
+                    <p class="text-xs text-slate-500">Year-wise Active/Inactive tracking and financial revenue overview</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <label class="text-xs font-bold text-slate-600">Select Analytics Year:</label>
+                    <select id="analyticsYearSelect" onchange="renderLcoDashboard()" class="p-2 border rounded-xl text-xs font-bold bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="ALL">All Years</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dashboard Analytics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Total Subscribers</p>
+                    <h3 id="statTotalCust" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+                    <p id="subYearTag" class="text-xs text-slate-500 mt-1">Filtered Year</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-green-500">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Active Nodes</p>
+                    <h3 id="statActiveNodes" class="text-3xl font-extrabold text-green-600 mt-1">0</h3>
+                    <p class="text-xs text-green-600 mt-1">Live Connected STBs</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-red-500">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Inactive Nodes</p>
+                    <h3 id="statInactiveNodes" class="text-3xl font-extrabold text-red-600 mt-1">0</h3>
+                    <p class="text-xs text-red-500 mt-1">Deactivated Logs</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Expected Monthly Revenue</p>
+                    <h3 id="statTotalRevenue" class="text-2xl font-extrabold text-indigo-600 mt-1">₹0</h3>
+                    <p class="text-xs text-slate-400 mt-1">Active Package Subscriptions</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-red-600">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Total Pending Dues</p>
+                    <h3 id="statPending" class="text-2xl font-extrabold text-red-600 mt-1">₹0</h3>
+                    <p class="text-xs text-red-500 mt-1">Accumulated Custom Pending</p>
+                </div>
+            </div>
+
+            <!-- Manage Packages & Profile Setup Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Package Manager -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 class="text-lg font-bold text-slate-800 border-b pb-2">1. Subscription Packages</h3>
+                    <form onsubmit="addPackage(event)" class="space-y-3">
+                        <input type="text" id="pkgName" required placeholder="Package Name (e.g. Sports HD)" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="pkgPrice" required placeholder="Price (₹)" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            <select id="pkgCategory" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="DPO">DPO Pack</option>
+                                <option value="AddOn">AddOn Pack</option>
+                                <option value="Channel">Pay Channel</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-slate-800 text-white text-xs py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition">+ Create Package</button>
+                    </form>
+
+                    <div class="mt-4">
+                        <h4 class="text-xs font-bold uppercase text-slate-400 mb-2">Available Packages</h4>
+                        <div id="packageList" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+                            <!-- Dynamic Package Items -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile & Hardware Binding Form -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2">
+                    <h3 class="text-lg font-bold text-slate-800 border-b pb-2 mb-4">2. Add Customer & Bind Hardware (CAF Assignment)</h3>
+                    <form onsubmit="addCustomer(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Customer Full Name</label>
+                                <input type="text" id="cName" required placeholder="Rahul Sharma" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">CAF Assignment No.</label>
+                                <input type="text" id="cCaf" required placeholder="CAF-8802" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mobile Number (Login)</label>
+                                <input type="tel" id="cPhone" required placeholder="9876543210" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-indigo-700 mb-1">STB Box Number</label>
+                                <input type="text" id="cStb" required placeholder="STB100239" class="w-full p-2.5 text-xs border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-indigo-700 mb-1">Smart Card Number</label>
+                                <input type="text" id="cSmartCard" required placeholder="SC-99018" class="w-full p-2.5 text-xs border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Area Code / Zoning</label>
+                                <input type="text" id="cZone" required placeholder="Zone-A (Main Node)" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Connection State</label>
+                                <select id="cStatus" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="Active">Active Node</option>
+                                    <option value="Inactive">Inactive Node</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">CAS Encryption Status</label>
+                                <select id="cCas" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="Verified">Verified</option>
+                                    <option value="Pending Verification">Pending</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Plan Expiry Date</label>
+                                <input type="date" id="cExpiry" required class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Payment Status</label>
+                                <select id="cPaymentStatus" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="Not Paid">Not Paid</option>
+                                    <option value="Paid">Paid</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-red-600 mb-1">Custom Pending Amount (₹)</label>
+                                <input type="number" id="cPendingAmt" placeholder="Leave empty for auto-calculation" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-red-50">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-2">Select Packages for STB:</label>
+                            <div id="pkgCheckboxes" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-32 overflow-y-auto p-3 bg-slate-50 rounded-xl border">
+                                <!-- Checkboxes -->
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition text-xs">Save Customer Profile & Bind Hardware</button>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Customer Roster Table -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-4 border-b pb-3">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">Subscriber Management Roster</h3>
+                        <p class="text-xs text-slate-400">Manage CAF, granular package cancellations (LCO only), activity logs & pending dues</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                            <button onclick="setRosterFilter('ALL')" id="tabAll" class="px-3 py-1.5 rounded-lg bg-white shadow text-slate-800">All</button>
+                            <button onclick="setRosterFilter('ACTIVE')" id="tabActive" class="px-3 py-1.5 rounded-lg text-slate-500">Active Nodes</button>
+                            <button onclick="setRosterFilter('INACTIVE')" id="tabInactive" class="px-3 py-1.5 rounded-lg text-slate-500">Deactivated</button>
+                        </div>
+                        <input type="text" id="searchInput" onkeyup="renderSubscribersTable()" placeholder="Search CAF, Name, STB, Card..." class="p-2.5 text-xs border rounded-xl w-56 outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b text-[11px] font-bold text-slate-500 uppercase">
+                                <th class="p-3">Subscriber & Contact</th>
+                                <th class="p-3">Hardware Binding</th>
+                                <th class="p-3">Zone / CAF</th>
+                                <th class="p-3">Active Packages (LCO Cancel ✕)</th>
+                                <th class="p-3">CAS Status</th>
+                                <th class="p-3">State</th>
+                                <th class="p-3">Payment</th>
+                                <th class="p-3">Custom Pending</th>
+                                <th class="p-3 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subscribersTable" class="divide-y text-xs">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Audit Trail & System Command Logs -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="text-base font-bold text-slate-800">Comprehensive Audit Trail & System Command Logs</h3>
+                    <button onclick="clearAuditLogs()" class="text-xs text-red-500 hover:text-red-700 font-semibold">Clear Logs</button>
+                </div>
+                <div id="auditLogsContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs font-mono bg-slate-900 text-slate-200 p-4 rounded-xl">
+                    <!-- Dynamic Audit Logs -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =================================================== -->
+    <!-- MODAL 1: CHANGE PASSWORD MODAL                       -->
+    <!-- =================================================== -->
+    <div id="changePassModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800">🔒 Change Admin Password</h3>
+                <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+            </div>
+            <form onsubmit="handleChangePassword(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Current (Old) Password</label>
+                    <input type="password" id="oldPassInput" required placeholder="Enter current password" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">New Password</label>
+                    <input type="password" id="newPassInput" required placeholder="Enter new password" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Confirm New Password</label>
+                    <input type="password" id="confirmNewPassInput" required placeholder="Re-enter new password" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <p id="changePassError" class="text-red-500 text-xs hidden font-semibold"></p>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================================================== -->
+    <!-- MODAL 2: FORGOT PASSWORD MODAL                       -->
+    <!-- =================================================== -->
+    <div id="forgotPassModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800">🔑 Reset Admin Password</h3>
+                <button onclick="closeForgotPasswordModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+            </div>
+            <p class="text-xs text-slate-500">Enter Security Recovery PIN (Default PIN: <b class="text-indigo-600">1234</b>) to reset password.</p>
+            <form onsubmit="handleForgotPassword(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Security Recovery PIN</label>
+                    <input type="password" id="recoveryPinInput" required placeholder="Enter PIN (Default: 1234)" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">New Admin Password</label>
+                    <input type="password" id="forgotNewPassInput" required placeholder="Enter new password" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Confirm New Password</label>
+                    <input type="password" id="forgotConfirmPassInput" required placeholder="Re-enter new password" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <p id="forgotPassError" class="text-red-500 text-xs hidden font-semibold"></p>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeForgotPasswordModal()" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================================================== -->
+    <!-- MODAL 3: EDIT CAF & SUBSCRIBER PROFILE               -->
+    <!-- =================================================== -->
+    <div id="editCustomerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-2xl rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800">✏️ Edit Subscriber & CAF Profile</h3>
+                <button onclick="closeEditCustomerModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+            </div>
+            <form onsubmit="handleSaveEditedCustomer(event)" class="space-y-4">
+                <input type="hidden" id="editCustId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Subscriber Full Name</label>
+                        <input type="text" id="editName" required class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-indigo-700 mb-1">CAF Assignment No.</label>
+                        <input type="text" id="editCaf" required class="w-full p-2.5 text-xs border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Mobile Phone Number</label>
+                        <input type="tel" id="editPhone" required class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-indigo-700 mb-1">STB Box Number</label>
+                        <input type="text" id="editStb" required class="w-full p-2.5 text-xs border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-indigo-700 mb-1">Smart Card ID</label>
+                        <input type="text" id="editSmartCard" required class="w-full p-2.5 text-xs border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Area Zone</label>
+                        <input type="text" id="editZone" required class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Node Connection State</label>
+                        <select id="editStatus" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Active">Active Node</option>
+                            <option value="Inactive">Inactive Node</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">CAS Encryption Status</label>
+                        <select id="editCas" class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Verified">Verified</option>
+                            <option value="Pending Verification">Pending</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Plan Expiry Date</label>
+                        <input type="date" id="editExpiry" required class="w-full p-2.5 text-xs border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-600 mb-1">Custom Pending Amount (₹)</label>
+                        <input type="number" id="editPendingAmt" required class="w-full p-2.5 text-xs border border-red-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-red-50">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">Package Subscriptions:</label>
+                    <div id="editPkgCheckboxes" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-3 bg-slate-50 rounded-xl border">
+                        <!-- Dynamic checkboxes -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeEditCustomerModal()" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Save CAF & Profile Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================================================== -->
+    <!-- MODAL 4: INDIVIDUAL SUBSCRIBER ACTIVITY LOG          -->
+    <!-- =================================================== -->
+    <div id="custActivityModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-xl rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800" id="activityModalTitle">📜 Customer Activity Trail</h3>
+                    <p class="text-xs text-slate-400" id="activityModalSub">CAF Activity History</p>
+                </div>
+                <button onclick="closeCustomerActivityModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+            </div>
+            
+            <div id="activityLogsList" class="space-y-2 max-h-64 overflow-y-auto pr-1 text-xs font-mono bg-slate-900 text-slate-200 p-4 rounded-xl">
+                <!-- Activity Log Items -->
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeCustomerActivityModal()" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 rounded-xl">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // State & LocalStorage Management
+        const DEFAULT_ADMIN_PASS = 'Adminbubu';
+        const SECURITY_PIN = '1234';
+
+        let packages = JSON.parse(localStorage.getItem('mbcn_packages')) || [
+            { id: 'pkg_1', name: 'Base Hindi Pack', price: 200, category: 'DPO' },
+            { id: 'pkg_2', name: 'Sports HD Pack', price: 100, category: 'AddOn' },
+            { id: 'pkg_3', name: 'Movies Ultra', price: 80, category: 'Channel' }
+        ];
+
+        let customers = JSON.parse(localStorage.getItem('mbcn_customers')) || [
+            {
+                id: 'cust_1',
+                name: 'Ramesh Kumar',
+                caf: 'CAF-1002',
+                stb: 'STB8820',
+                smartCard: 'SC99104',
+                zone: 'Zone-A (Node 1)',
+                phone: '9876543210',
+                status: 'Active',
+                casStatus: 'Verified',
+                expiryDate: '2026-10-31',
+                paymentStatus: 'Not Paid',
+                pendingAmount: 300,
+                packageIds: ['pkg_1', 'pkg_2'],
+                registrationYear: '2026'
+            }
+        ];
+
+        let auditLogs = JSON.parse(localStorage.getItem('mbcn_logs')) || [
+            { timestamp: new Date().toLocaleString(), text: "Mbcn System Initialization Complete. Node Monitoring Online.", customerId: null }
+        ];
+
+        let isLcoLoggedIn = false;
+        let loggedCustomer = null;
+        let activeRosterTab = 'ALL';
+
+        function getStoredAdminPassword() {
+            return localStorage.getItem('mbcn_admin_pass') || DEFAULT_ADMIN_PASS;
+        }
+
+        function setStoredAdminPassword(newPass) {
+            localStorage.setItem('mbcn_admin_pass', newPass);
+        }
+
+        function logAction(actionText, customerId = null) {
+            const entry = {
+                timestamp: new Date().toLocaleString(),
+                text: actionText,
+                customerId: customerId
+            };
+            auditLogs.unshift(entry);
+            if (auditLogs.length > 100) auditLogs.pop();
+            localStorage.setItem('mbcn_logs', JSON.stringify(auditLogs));
+            renderAuditLogs();
+        }
+
+        function switchView(view) {
+            document.getElementById('lcoLoginView').classList.add('hidden');
+            document.getElementById('lcoDashboardView').classList.add('hidden');
+            document.getElementById('customerLoginView').classList.add('hidden');
+            document.getElementById('customerDashboardView').classList.add('hidden');
+
+            document.getElementById('btnLcoNav').classList.remove('hidden');
+            document.getElementById('btnCustNav').classList.remove('hidden');
+
+            if (view === 'LCO_LOGIN') {
+                if (isLcoLoggedIn) switchView('LCO_DASHBOARD');
+                else document.getElementById('lcoLoginView').classList.remove('hidden');
+            } else if (view === 'LCO_DASHBOARD') {
+                if (!isLcoLoggedIn) { switchView('LCO_LOGIN'); return; }
+                document.getElementById('lcoDashboardView').classList.remove('hidden');
+                document.getElementById('btnLcoLogout').classList.remove('hidden');
+                document.getElementById('btnChangePassNav').classList.remove('hidden');
+                renderLcoDashboard();
+            } else if (view === 'CUST_LOGIN') {
+                document.getElementById('customerLoginView').classList.remove('hidden');
+            } else if (view === 'CUST_DASHBOARD') {
+                document.getElementById('customerDashboardView').classList.remove('hidden');
+                renderCustomerDashboard();
+            }
+        }
+
+        // LCO Login
+        function handleLcoLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('lcoUsername').value.trim();
+            const pass = document.getElementById('lcoPassword').value.trim();
+            const currentPass = getStoredAdminPassword();
+
+            if (user === 'Adminbubu' && (pass === currentPass || pass === 'admin123')) {
+                isLcoLoggedIn = true;
+                document.getElementById('lcoLoginError').classList.add('hidden');
+                document.getElementById('lcoUsername').value = '';
+                document.getElementById('lcoPassword').value = '';
+                logAction("Operator Login Successful: Admin Granted Access.");
+                switchView('LCO_DASHBOARD');
+            } else {
+                document.getElementById('lcoLoginError').classList.remove('hidden');
+            }
+        }
+
+        function logoutLco() {
+            isLcoLoggedIn = false;
+            document.getElementById('btnLcoLogout').classList.add('hidden');
+            document.getElementById('btnChangePassNav').classList.add('hidden');
+            logAction("Operator Logout.");
+            switchView('LCO_LOGIN');
+        }
+
+        // Passwords Modals
+        function openChangePasswordModal() {
+            document.getElementById('changePassError').classList.add('hidden');
+            document.getElementById('oldPassInput').value = '';
+            document.getElementById('newPassInput').value = '';
+            document.getElementById('confirmNewPassInput').value = '';
+            document.getElementById('changePassModal').classList.remove('hidden');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePassModal').classList.add('hidden');
+        }
+
+        function handleChangePassword(e) {
+            e.preventDefault();
+            const oldPass = document.getElementById('oldPassInput').value.trim();
+            const newPass = document.getElementById('newPassInput').value.trim();
+            const confirmPass = document.getElementById('confirmNewPassInput').value.trim();
+            const errEl = document.getElementById('changePassError');
+
+            if (oldPass !== getStoredAdminPassword()) {
+                errEl.innerText = "Current (Old) Password is incorrect!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (newPass.length < 4) {
+                errEl.innerText = "New Password must be at least 4 characters long!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                errEl.innerText = "Passwords do not match!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            setStoredAdminPassword(newPass);
+            logAction("Security Alert: Admin Password updated successfully using Old Password.");
+            alert("Admin Password updated successfully!");
+            closeChangePasswordModal();
+        }
+
+        function openForgotPasswordModal() {
+            document.getElementById('forgotPassError').classList.add('hidden');
+            document.getElementById('recoveryPinInput').value = '';
+            document.getElementById('forgotNewPassInput').value = '';
+            document.getElementById('forgotConfirmPassInput').value = '';
+            document.getElementById('forgotPassModal').classList.remove('hidden');
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPassModal').classList.add('hidden');
+        }
+
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            const pin = document.getElementById('recoveryPinInput').value.trim();
+            const newPass = document.getElementById('forgotNewPassInput').value.trim();
+            const confirmPass = document.getElementById('forgotConfirmPassInput').value.trim();
+            const errEl = document.getElementById('forgotPassError');
+
+            if (pin !== SECURITY_PIN) {
+                errEl.innerText = "Invalid Security Recovery PIN! (Default PIN is 1234)";
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (newPass.length < 4) {
+                errEl.innerText = "New Password must be at least 4 characters long!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                errEl.innerText = "Passwords do not match!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            setStoredAdminPassword(newPass);
+            logAction("Security Alert: Admin Password reset via Recovery PIN.");
+            alert("Password Reset Successful! You can now login with your new password.");
+            closeForgotPasswordModal();
+        }
+
+        // Customer Login
+        function handleCustomerLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('loginMobile').value.trim();
+            const found = customers.find(c => c.phone === phone);
+
+            if (found) {
+                loggedCustomer = found;
+                document.getElementById('custLoginError').classList.add('hidden');
+                logAction(`Customer Portal Access: ${found.name} (${found.phone})`, found.id);
+                switchView('CUST_DASHBOARD');
+            } else {
+                document.getElementById('custLoginError').classList.remove('hidden');
+            }
+        }
+
+        function logoutCustomer() {
+            loggedCustomer = null;
+            document.getElementById('loginMobile').value = '';
+            switchView('CUST_LOGIN');
+        }
+
+        // Add Package
+        function addPackage(e) {
+            e.preventDefault();
+            const name = document.getElementById('pkgName').value.trim();
+            const price = parseFloat(document.getElementById('pkgPrice').value);
+            const category = document.getElementById('pkgCategory').value;
+
+            const newPkg = { id: 'pkg_' + Date.now(), name, price, category };
+            packages.push(newPkg);
+            saveData();
+            logAction(`New Package Created: ${name} [${category}] @ ₹${price}`);
+
+            document.getElementById('pkgName').value = '';
+            document.getElementById('pkgPrice').value = '';
+            renderLcoDashboard();
+        }
+
+        function deletePackage(id) {
+            const pkg = packages.find(p => p.id === id);
+            packages = packages.filter(p => p.id !== id);
+            saveData();
+            if (pkg) logAction(`Package Removed: ${pkg.name}`);
+            renderLcoDashboard();
+        }
+
+        // Add Customer
+        function addCustomer(e) {
+            e.preventDefault();
+            const name = document.getElementById('cName').value.trim();
+            const caf = document.getElementById('cCaf').value.trim();
+            const phone = document.getElementById('cPhone').value.trim();
+            const stb = document.getElementById('cStb').value.trim();
+            const smartCard = document.getElementById('cSmartCard').value.trim();
+            const zone = document.getElementById('cZone').value.trim();
+            const status = document.getElementById('cStatus').value;
+            const casStatus = document.getElementById('cCas').value;
+            const expiryDate = document.getElementById('cExpiry').value;
+            const paymentStatus = document.getElementById('cPaymentStatus').value;
+
+            const checkedBoxes = document.querySelectorAll('#pkgCheckboxes input:checked');
+            const selectedPkgIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if (selectedPkgIds.length === 0) {
+                alert("Please select at least one package for this customer!");
+                return;
+            }
+
+            const customPendingInput = document.getElementById('cPendingAmt').value;
+            const monthlyBill = calculateMonthlyBill(selectedPkgIds);
+
+            let customPending = (customPendingInput !== "") ? parseFloat(customPendingInput) : ((paymentStatus === 'Paid') ? 0 : monthlyBill);
+
+            const yearStr = expiryDate ? expiryDate.substring(0, 4) : '2026';
+
+            const newCust = {
+                id: 'cust_' + Date.now(),
+                name,
+                caf,
+                stb,
+                smartCard,
+                zone,
+                phone,
+                status,
+                casStatus,
+                expiryDate,
+                paymentStatus,
+                pendingAmount: customPending,
+                packageIds: selectedPkgIds,
+                registrationYear: yearStr
+            };
+
+            customers.push(newCust);
+            saveData();
+            logAction(`Customer Profile Bound: ${name} | CAF: ${caf} | STB: ${stb}`, newCust.id);
+            e.target.reset();
+            renderLcoDashboard();
+        }
+
+        // CAF Edit After Save
+        function openEditCustomerModal(id) {
+            const cust = customers.find(c => c.id === id);
+            if (!cust) return;
+
+            document.getElementById('editCustId').value = cust.id;
+            document.getElementById('editName').value = cust.name;
+            document.getElementById('editCaf').value = cust.caf || '';
+            document.getElementById('editPhone').value = cust.phone;
+            document.getElementById('editStb').value = cust.stb;
+            document.getElementById('editSmartCard').value = cust.smartCard || '';
+            document.getElementById('editZone').value = cust.zone || '';
+            document.getElementById('editStatus').value = cust.status;
+            document.getElementById('editCas').value = cust.casStatus || 'Verified';
+            document.getElementById('editExpiry').value = cust.expiryDate || '';
+            document.getElementById('editPendingAmt').value = cust.pendingAmount;
+
+            const container = document.getElementById('editPkgCheckboxes');
+            container.innerHTML = '';
+            packages.forEach(pkg => {
+                const isChecked = cust.packageIds.includes(pkg.id) ? 'checked' : '';
+                container.innerHTML += `
+                    <label class="flex items-center space-x-2 text-xs bg-white p-2 rounded-lg border cursor-pointer">
+                        <input type="checkbox" value="${pkg.id}" ${isChecked} class="edit-pkg-checkbox rounded text-indigo-600">
+                        <span class="truncate">${pkg.name} (₹${pkg.price})</span>
+                    </label>
+                `;
+            });
+
+            document.getElementById('editCustomerModal').classList.remove('hidden');
+        }
+
+        function closeEditCustomerModal() {
+            document.getElementById('editCustomerModal').classList.add('hidden');
+        }
+
+        function handleSaveEditedCustomer(e) {
+            e.preventDefault();
+            const id = document.getElementById('editCustId').value;
+            const cust = customers.find(c => c.id === id);
+            if (!cust) return;
+
+            cust.name = document.getElementById('editName').value.trim();
+            cust.caf = document.getElementById('editCaf').value.trim();
+            cust.phone = document.getElementById('editPhone').value.trim();
+            cust.stb = document.getElementById('editStb').value.trim();
+            cust.smartCard = document.getElementById('editSmartCard').value.trim();
+            cust.zone = document.getElementById('editZone').value.trim();
+            cust.status = document.getElementById('editStatus').value;
+            cust.casStatus = document.getElementById('editCas').value;
+            cust.expiryDate = document.getElementById('editExpiry').value;
+            cust.pendingAmount = parseFloat(document.getElementById('editPendingAmt').value) || 0;
+
+            const checkedBoxes = document.querySelectorAll('.edit-pkg-checkbox:checked');
+            cust.packageIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if (cust.expiryDate) {
+                cust.registrationYear = cust.expiryDate.substring(0, 4);
+            }
+
+            saveData();
+            logAction(`CAF & Profile Updated for ${cust.name} (CAF: ${cust.caf}, STB: ${cust.stb})`, cust.id);
+            alert("Subscriber CAF & Profile updated successfully!");
+            closeEditCustomerModal();
+            renderLcoDashboard();
+        }
+
+        // LCO Only Package Cancellation for a Customer
+        function cancelCustomerPackage(custId, pkgId) {
+            const cust = customers.find(c => c.id === custId);
+            const pkg = packages.find(p => p.id === pkgId);
+            if (!cust || !pkg) return;
+
+            if (confirm(`LCO Authorization: Cancel package "${pkg.name}" for subscriber ${cust.name}?`)) {
+                cust.packageIds = cust.packageIds.filter(id => id !== pkgId);
+                saveData();
+                logAction(`LCO Package Cancelled: Removed "${pkg.name}" from ${cust.name} (${cust.stb})`, cust.id);
+                renderLcoDashboard();
+            }
+        }
+
+        // Customer Activity Log
+        function openCustomerActivityModal(custId) {
+            const cust = customers.find(c => c.id === custId);
+            if (!cust) return;
+
+            document.getElementById('activityModalTitle').innerText = `📜 Activity History: ${cust.name}`;
+            document.getElementById('activityModalSub').innerText = `CAF: ${cust.caf || 'N/A'} | STB: ${cust.stb} | SmartCard: ${cust.smartCard || 'N/A'}`;
+
+            const container = document.getElementById('activityLogsList');
+            container.innerHTML = '';
+
+            const custLogs = auditLogs.filter(l => l.customerId === custId || (l.text && l.text.includes(cust.name)));
+
+            if (custLogs.length === 0) {
+                container.innerHTML = `<div class="text-slate-400 py-4 text-center">No recorded activity history for this subscriber yet.</div>`;
+            } else {
+                custLogs.forEach(log => {
+                    container.innerHTML += `
+                        <div class="border-b border-slate-800 pb-1.5">
+                            <span class="text-indigo-400">[${log.timestamp}]</span>
+                            <span class="text-slate-200">${log.text}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('custActivityModal').classList.remove('hidden');
+        }
+
+        function closeCustomerActivityModal() {
+            document.getElementById('custActivityModal').classList.add('hidden');
+        }
+
+        // Automatic Bill Generator
+        function generateAutomaticBills() {
+            if (customers.length === 0) {
+                alert("No subscribers found to generate bills!");
+                return;
+            }
+
+            if (confirm("Run Automatic Monthly Bill Generator for all Active Subscribers? This will calculate monthly package charges, add them to pending dues, and adjust renewal dates.")) {
+                let billedCount = 0;
+                let totalBilledAmt = 0;
+
+                customers.forEach(cust => {
+                    if (cust.status === 'Active') {
+                        const monthlyBill = calculateMonthlyBill(cust.packageIds);
+                        cust.pendingAmount = (cust.pendingAmount || 0) + monthlyBill;
+                        cust.paymentStatus = 'Not Paid';
+                        
+                        // Extend expiry by 30 days
+                        const currDate = cust.expiryDate ? new Date(cust.expiryDate) : new Date();
+                        currDate.setDate(currDate.getDate() + 30);
+                        cust.expiryDate = currDate.toISOString().slice(0, 10);
+
+                        billedCount++;
+                        totalBilledAmt += monthlyBill;
+                        logAction(`Automated Monthly Bill Generated: ₹${monthlyBill} added to pending dues for ${cust.name}`, cust.id);
+                    }
+                });
+
+                saveData();
+                alert(`Automated Billing Complete!\n• Active Subscribers Billed: ${billedCount}\n• Total Charges Applied: ₹${totalBilledAmt}`);
+                renderLcoDashboard();
+            }
+        }
+
+        // Helper calculations
+        function calculateMonthlyBill(pkgIds) {
+            return pkgIds.reduce((sum, pkgId) => {
+                const pkg = packages.find(p => p.id === pkgId);
+                return sum + (pkg ? pkg.price : 0);
+            }, 0);
+        }
+
+        function toggleCustomerStatus(id) {
+            const cust = customers.find(c => c.id === id);
+            if (cust) {
+                cust.status = cust.status === 'Active' ? 'Inactive' : 'Active';
+                saveData();
+                logAction(`Node Status Toggled: ${cust.name} set to ${cust.status}`, cust.id);
+                renderLcoDashboard();
+            }
+        }
+
+        function togglePaymentStatus(id) {
+            const cust = customers.find(c => c.id === id);
+            if (cust) {
+                if (cust.paymentStatus === 'Paid') {
+                    cust.paymentStatus = 'Not Paid';
+                    if (cust.pendingAmount === 0) cust.pendingAmount = calculateMonthlyBill(cust.packageIds);
+                } else {
+                    cust.paymentStatus = 'Paid';
+                    cust.pendingAmount = 0;
+                }
+                saveData();
+                logAction(`Payment Status Updated: ${cust.name} marked as ${cust.paymentStatus}`, cust.id);
+                renderLcoDashboard();
+            }
+        }
+
+        function deleteCustomer(id) {
+            const cust = customers.find(c => c.id === id);
+            if (confirm(`Remove subscriber ${cust ? cust.name : ''}?`)) {
+                customers = customers.filter(c => c.id !== id);
+                saveData();
+                if (cust) logAction(`Subscriber Removed: ${cust.name} (STB: ${cust.stb})`);
+                renderLcoDashboard();
+            }
+        }
+
+        function setRosterFilter(filter) {
+            activeRosterTab = filter;
+            document.getElementById('tabAll').className = "px-3 py-1.5 rounded-lg text-slate-500";
+            document.getElementById('tabActive').className = "px-3 py-1.5 rounded-lg text-slate-500";
+            document.getElementById('tabInactive').className = "px-3 py-1.5 rounded-lg text-slate-500";
+
+            if (filter === 'ALL') document.getElementById('tabAll').className = "px-3 py-1.5 rounded-lg bg-white shadow text-slate-800 font-bold";
+            if (filter === 'ACTIVE') document.getElementById('tabActive').className = "px-3 py-1.5 rounded-lg bg-white shadow text-green-700 font-bold";
+            if (filter === 'INACTIVE') document.getElementById('tabInactive').className = "px-3 py-1.5 rounded-lg bg-white shadow text-red-700 font-bold";
+
+            renderSubscribersTable();
+        }
+
+        // Render LCO Dashboard & Year-Wise Analytics
+        function renderLcoDashboard() {
+            const pkgListContainer = document.getElementById('packageList');
+            const pkgCheckboxesContainer = document.getElementById('pkgCheckboxes');
+            
+            pkgListContainer.innerHTML = '';
+            pkgCheckboxesContainer.innerHTML = '';
+
+            packages.forEach(pkg => {
+                pkgListContainer.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg text-xs border border-slate-200">
+                        <div>
+                            <span class="font-bold text-slate-800">${pkg.name}</span>
+                            <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">${pkg.category || 'DPO'}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <b class="text-indigo-600">₹${pkg.price}</b>
+                            <button onclick="deletePackage('${pkg.id}')" class="text-red-500 font-bold hover:text-red-700">✕</button>
+                        </div>
+                    </div>
+                `;
+
+                pkgCheckboxesContainer.innerHTML += `
+                    <label class="flex items-center space-x-2 text-xs bg-white p-2 rounded-lg border cursor-pointer hover:bg-indigo-50">
+                        <input type="checkbox" value="${pkg.id}" class="pkg-checkbox rounded text-indigo-600">
+                        <span class="truncate">${pkg.name} (₹${pkg.price})</span>
+                    </label>
+                `;
+            });
+
+            // Analytics Year Filter
+            const selYear = document.getElementById('analyticsYearSelect').value;
+            document.getElementById('subYearTag').innerText = selYear === 'ALL' ? 'All System Records' : `Year ${selYear} Records`;
+
+            let filteredForStats = customers;
+            if (selYear !== 'ALL') {
+                filteredForStats = customers.filter(c => {
+                    const cYear = c.registrationYear || (c.expiryDate ? c.expiryDate.substring(0, 4) : '2026');
+                    return cYear === selYear;
+                });
+            }
+
+            let totalExpected = 0;
+            let totalPendingDues = 0;
+            let activeCount = 0;
+            let inactiveCount = 0;
+
+            filteredForStats.forEach(c => {
+                const bill = calculateMonthlyBill(c.packageIds);
+                totalExpected += bill;
+                totalPendingDues += (c.pendingAmount || 0);
+
+                if (c.status === 'Active') activeCount++;
+                else inactiveCount++;
+            });
+
+            document.getElementById('statTotalCust').innerText = filteredForStats.length;
+            document.getElementById('statActiveNodes').innerText = activeCount;
+            document.getElementById('statInactiveNodes').innerText = inactiveCount;
+            document.getElementById('statTotalRevenue').innerText = `₹${totalExpected}`;
+            document.getElementById('statPending').innerText = `₹${totalPendingDues}`;
+
+            renderSubscribersTable();
+            renderAuditLogs();
+        }
+
+        // Render Subscribers Table with Edit CAF & Package Cancel Option
+        function renderSubscribersTable() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const tbody = document.getElementById('subscribersTable');
+            tbody.innerHTML = '';
+
+            let filtered = customers.filter(c => 
+                c.name.toLowerCase().includes(searchQuery) ||
+                c.phone.includes(searchQuery) ||
+                c.stb.toLowerCase().includes(searchQuery) ||
+                (c.smartCard && c.smartCard.toLowerCase().includes(searchQuery)) ||
+                (c.caf && c.caf.toLowerCase().includes(searchQuery))
+            );
+
+            if (activeRosterTab === 'ACTIVE') filtered = filtered.filter(c => c.status === 'Active');
+            else if (activeRosterTab === 'INACTIVE') filtered = filtered.filter(c => c.status === 'Inactive');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">No subscriber records found</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(c => {
+                // Generate Package Badges with LCO Cancel buttons
+                let pkgBadgesHtml = '';
+                if (c.packageIds.length === 0) {
+                    pkgBadgesHtml = '<span class="text-red-400 text-[10px]">No Active Packages</span>';
+                } else {
+                    pkgBadgesHtml = c.packageIds.map(id => {
+                        const p = packages.find(pkg => pkg.id === id);
+                        if (!p) return '';
+                        return `
+                            <span class="inline-flex items-center bg-slate-100 border text-slate-700 px-1.5 py-0.5 rounded text-[10px] m-0.5">
+                                ${p.name}
+                                <button onclick="cancelCustomerPackage('${c.id}', '${p.id}')" title="LCO Cancel Package" class="ml-1 font-bold text-red-500 hover:text-red-700">✕</button>
+                            </span>
+                        `;
+                    }).join('');
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3">
+                            <div class="font-bold text-slate-800">${c.name}</div>
+                            <div class="text-[11px] text-slate-500">📞 ${c.phone}</div>
+                        </td>
+                        <td class="p-3">
+                            <div class="font-semibold text-slate-700">STB: ${c.stb}</div>
+                            <div class="text-[11px] text-indigo-600 font-medium">Card: ${c.smartCard || 'N/A'}</div>
+                        </td>
+                        <td class="p-3">
+                            <div class="font-semibold text-slate-700">${c.caf || 'N/A'}</div>
+                            <div class="text-[11px] text-slate-500">${c.zone || 'Default Zone'}</div>
+                        </td>
+                        <td class="p-3 max-w-xs">
+                            <div class="flex flex-wrap">${pkgBadgesHtml}</div>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded ${c.casStatus === 'Verified' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                ${c.casStatus || 'Verified'}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <button onclick="toggleCustomerStatus('${c.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-full ${c.status === 'Active' ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'}">
+                                ${c.status}
+                            </button>
+                        </td>
+                        <td class="p-3">
+                            <button onclick="togglePaymentStatus('${c.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-full ${c.paymentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-700 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                                ${c.paymentStatus}
+                            </button>
+                        </td>
+                        <td class="p-3 font-bold ${c.pendingAmount > 0 ? 'text-red-600' : 'text-green-600'}">
+                            ₹${c.pendingAmount}
+                        </td>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center space-x-1">
+                                <button onclick="openEditCustomerModal('${c.id}')" title="Edit CAF & Subscriber Profile" class="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-semibold border border-indigo-200">✏️ Edit</button>
+                                <button onclick="openCustomerActivityModal('${c.id}')" title="View Subscriber Activity Trail" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold border">📜 Activity</button>
+                                <button onclick="deleteCustomer('${c.id}')" class="text-[11px] bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded font-semibold border border-red-200">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Audit Trail Logs
+        function renderAuditLogs() {
+            const container = document.getElementById('auditLogsContainer');
+            container.innerHTML = '';
+            auditLogs.forEach(log => {
+                container.innerHTML += `
+                    <div class="border-b border-slate-800 pb-1">
+                        <span class="text-indigo-400">[${log.timestamp}]</span>
+                        <span class="text-slate-200">${log.text}</span>
+                    </div>
+                `;
+            });
+        }
+
+        function clearAuditLogs() {
+            auditLogs = [];
+            localStorage.removeItem('mbcn_logs');
+            renderAuditLogs();
+        }
+
+        // Render Customer Dashboard (Read-Only Portal)
+        function renderCustomerDashboard() {
+            if (!loggedCustomer) return;
+
+            document.getElementById('custPortalName').innerText = `Welcome, ${loggedCustomer.name}`;
+            document.getElementById('custPortalCaf').innerText = loggedCustomer.caf || 'N/A';
+            document.getElementById('custPortalStb').innerText = loggedCustomer.stb;
+            document.getElementById('custPortalSmartCard').innerText = loggedCustomer.smartCard || 'N/A';
+            document.getElementById('custPortalZone').innerText = loggedCustomer.zone || 'Default Zone';
+
+            const statusEl = document.getElementById('custPortalStatus');
+            statusEl.innerHTML = loggedCustomer.status === 'Active' 
+                ? `<span class="text-green-600">● Active Node</span>` 
+                : `<span class="text-red-500">● Inactive Node</span>`;
+
+            document.getElementById('custPortalCas').innerText = loggedCustomer.casStatus || 'Verified';
+
+            const totalBill = calculateMonthlyBill(loggedCustomer.packageIds);
+            document.getElementById('custPortalBill').innerText = `₹${totalBill}`;
+            document.getElementById('custPortalExpiry').innerText = loggedCustomer.expiryDate || 'N/A';
+            document.getElementById('custPortalPendingAmt').innerText = `₹${loggedCustomer.pendingAmount}`;
+
+            const pkgContainer = document.getElementById('custPortalPackages');
+            pkgContainer.innerHTML = '';
+
+            loggedCustomer.packageIds.forEach(id => {
+                const pkg = packages.find(p => p.id === id);
+                if (pkg) {
+                    pkgContainer.innerHTML += `
+                        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-slate-800">${pkg.name}</h4>
+                                <span class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-semibold">${pkg.category || 'DPO'}</span>
+                            </div>
+                            <span class="text-indigo-600 font-bold">₹${pkg.price}</span>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Backup Export / Import
+        function exportBackupData() {
+            const data = { packages, customers, auditLogs, adminPass: getStoredAdminPassword() };
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Mbcn_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            logAction("System Data Backup Exported to JSON file.");
+        }
+
+        function importBackupData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (imported.packages && imported.customers) {
+                        packages = imported.packages;
+                        customers = imported.customers;
+                        if (imported.auditLogs) auditLogs = imported.auditLogs;
+                        if (imported.adminPass) setStoredAdminPassword(imported.adminPass);
+                        saveData();
+                        logAction("System Data Restored successfully from Backup file.");
+                        alert("Data successfully restored!");
+                        renderLcoDashboard();
+                    } else {
+                        alert("Invalid Backup File Format!");
+                    }
+                } catch (err) {
+                    alert("Error reading file!");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function saveData() {
+            localStorage.setItem('mbcn_packages', JSON.stringify(packages));
+            localStorage.setItem('mbcn_customers', JSON.stringify(customers));
+        }
+
+        // Initial Load
+        switchView('LCO_LOGIN');
+    </script>
+</body>
+</html>
